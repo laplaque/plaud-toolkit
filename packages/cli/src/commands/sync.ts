@@ -60,6 +60,10 @@ export async function syncCommand(args: string[]): Promise<void> {
       console.log(`Skipping (no transcript): ${rec.filename}`);
       continue;
     }
+    if (content === 'notes' && !rec.is_summary) {
+      console.log(`Skipping (no summary): ${rec.filename}`);
+      continue;
+    }
 
     console.log(`Syncing: ${rec.filename} (${rec.id})...`);
     const detail = await client.getRecording(rec.id);

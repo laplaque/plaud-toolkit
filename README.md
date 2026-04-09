@@ -63,6 +63,7 @@ Add to your Claude config (`~/.claude.json`):
 ```
 
 Tools available:
+
 - `plaud_list_recordings` — list all recordings
 - `plaud_get_transcript` — get transcript by recording ID
 - `plaud_get_recording_detail` — full recording metadata
