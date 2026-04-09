@@ -55,8 +55,24 @@ export async function syncCommand(args: string[]): Promise<void> {
 
     if (fs.existsSync(mdFile)) continue;
 
+    // Pre-filter: skip recordings without relevant content
+    if (content === 'transcript' && !rec.is_trans) {
+      console.log(`Skipping (no transcript): ${rec.filename}`);
+      continue;
+    }
+
     console.log(`Syncing: ${rec.filename} (${rec.id})...`);
     const detail = await client.getRecording(rec.id);
+
+    // Skip if the requested content is empty
+    if (content === 'transcript' && !detail.transcript) {
+      console.log(`  Skipped: empty transcript`);
+      continue;
+    }
+    if (content === 'notes' && !detail.note && !detail.summary) {
+      console.log(`  Skipped: no notes or summary`);
+      continue;
+    }
 
     const sections: string[] = [
       '---',
