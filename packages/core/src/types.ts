@@ -37,9 +37,20 @@ export interface PlaudRecording {
   serial_number: string;
 }
 
+export interface PlaudTranscriptEntry {
+  start_time: number;
+  end_time: number;
+  content: string;
+  speaker: string;
+  original_speaker: string;
+}
+
 export interface PlaudRecordingDetail extends PlaudRecording {
   transcript: string;
-  summary?: string;
+  rawTranscript: PlaudTranscriptEntry[];
+  outline: string;
+  summary: string;
+  note: string;
 }
 
 export interface PlaudUserInfo {

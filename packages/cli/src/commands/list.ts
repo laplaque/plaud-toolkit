@@ -3,8 +3,10 @@ import { PlaudConfig, PlaudAuth, PlaudClient } from '@plaud/core';
 function createClient(): PlaudClient {
   const config = new PlaudConfig();
   const creds = config.getCredentials();
+  const configData = config.load() as any;
+  const region = creds?.region ?? configData.region ?? 'eu';
   const auth = new PlaudAuth(config);
-  return new PlaudClient(auth, creds?.region ?? 'eu');
+  return new PlaudClient(auth, region);
 }
 
 export async function listCommand(_args: string[]): Promise<void> {

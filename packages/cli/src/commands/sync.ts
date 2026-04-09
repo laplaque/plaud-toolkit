@@ -11,8 +11,10 @@ export async function syncCommand(args: string[]): Promise<void> {
 
   const config = new PlaudConfig();
   const creds = config.getCredentials();
+  const configData = config.load() as any;
+  const region = creds?.region ?? configData.region ?? 'eu';
   const auth = new PlaudAuth(config);
-  const client = new PlaudClient(auth, creds?.region ?? 'eu');
+  const client = new PlaudClient(auth, region);
 
   fs.mkdirSync(folder, { recursive: true });
 
@@ -30,21 +32,35 @@ export async function syncCommand(args: string[]): Promise<void> {
     console.log(`Syncing: ${rec.filename} (${rec.id})...`);
     const detail = await client.getRecording(rec.id);
 
-    const content = [
+    const sections: string[] = [
       '---',
       `plaud_id: ${rec.id}`,
       `title: "${rec.filename}"`,
       `date: ${date}`,
       `duration: ${Math.round(rec.duration / 60000)}m`,
       `source: plaud`,
+      `has_transcript: ${detail.transcript.length > 0}`,
+      `has_summary: ${detail.summary.length > 0}`,
       '---',
       '',
       `# ${rec.filename}`,
-      '',
-      detail.transcript || '*(No transcript available)*',
-    ].join('\n');
+    ];
 
-    fs.writeFileSync(mdFile, content);
+    if (detail.outline) {
+      sections.push('', '## Outline', '', detail.outline);
+    }
+
+    if (detail.note) {
+      sections.push('', '## Notes', '', detail.note);
+    } else if (detail.summary) {
+      sections.push('', '## Summary', '', detail.summary);
+    }
+
+    if (detail.transcript) {
+      sections.push('', '## Transcript', '', detail.transcript);
+    }
+
+    fs.writeFileSync(mdFile, sections.join('\n'));
     synced++;
   }
 
