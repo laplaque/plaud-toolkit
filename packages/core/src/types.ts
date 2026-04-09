@@ -19,6 +19,7 @@ export interface PlaudConfig {
 export const BASE_URLS: Record<string, string> = {
   us: 'https://api.plaud.ai',
   eu: 'https://api-euc1.plaud.ai',
+  ap: 'https://api-apne1.plaud.ai',
 };
 
 export interface PlaudRecording {

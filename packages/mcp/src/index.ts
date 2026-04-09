@@ -7,14 +7,17 @@ import { PlaudConfig, PlaudAuth, PlaudClient } from '@plaud/core';
 async function main() {
   const config = new PlaudConfig();
   const creds = config.getCredentials();
+  const token = config.getToken();
 
-  if (!creds) {
-    console.error('No Plaud credentials found. Run `plaud login` first.');
+  if (!creds && !token) {
+    console.error('No Plaud credentials or token found. Run `plaud login` or `plaud set-token <token> [region]`.');
     process.exit(1);
   }
 
   const auth = new PlaudAuth(config);
-  const client = new PlaudClient(auth, creds.region);
+  const configData = config.load();
+  const region = creds?.region ?? (configData as any).region ?? 'us';
+  const client = new PlaudClient(auth, region);
 
   const server = new McpServer({
     name: 'plaud-mcp',

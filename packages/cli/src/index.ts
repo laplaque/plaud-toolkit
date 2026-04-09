@@ -3,9 +3,11 @@ import { listCommand } from './commands/list.js';
 import { downloadCommand } from './commands/download.js';
 import { transcriptCommand } from './commands/transcript.js';
 import { syncCommand } from './commands/sync.js';
+import { setTokenCommand } from './commands/set-token.js';
 
 const COMMANDS: Record<string, (args: string[]) => Promise<void>> = {
   login: loginCommand,
+  'set-token': setTokenCommand,
   list: listCommand,
   download: downloadCommand,
   transcript: transcriptCommand,
@@ -40,6 +42,7 @@ function printUsage(): void {
 
 Commands:
   login                 Save your Plaud credentials
+  set-token <jwt> [region]  Save a JWT token directly (for Google Sign-In users)
   list                  List recordings
   download <id> [dir]   Download audio file
   transcript <id>       Print transcript

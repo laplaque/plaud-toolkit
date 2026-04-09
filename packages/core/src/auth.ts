@@ -16,6 +16,18 @@ export class PlaudAuth {
     if (cached && !this.isExpiringSoon(cached)) {
       return cached.accessToken;
     }
+    // If we have credentials, try login; otherwise fail with helpful message
+    const creds = this.config.getCredentials();
+    if (!creds) {
+      if (cached) {
+        // Token exists but expired, and no credentials to refresh
+        throw new Error(
+          'Token expired and no credentials to refresh. ' +
+          'Get a new token from web.plaud.ai and run: plaud set-token <token> [region]'
+        );
+      }
+      throw new Error('No credentials or token configured. Run `plaud login` or `plaud set-token <token> [region]`.');
+    }
     return this.login();
   }
 
