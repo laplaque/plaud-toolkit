@@ -46,5 +46,6 @@ Commands:
   list                  List recordings
   download <id> [dir]   Download audio file
   transcript <id>       Print transcript
-  sync <folder>         Download all new recordings to folder`);
+  sync [--content all|transcript|notes] <folder>
+                        Download recordings to folder (default: all)`);
 }

@@ -2,12 +2,38 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { PlaudConfig, PlaudAuth, PlaudClient } from '@plaud/core';
 
-export async function syncCommand(args: string[]): Promise<void> {
-  const folder = args[0];
+type ContentMode = 'all' | 'transcript' | 'notes';
+
+function parseArgs(args: string[]): { folder: string; content: ContentMode } {
+  let content: ContentMode = 'all';
+  const positional: string[] = [];
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--content' && i + 1 < args.length) {
+      const val = args[i + 1];
+      if (val === 'transcript' || val === 'notes' || val === 'all') {
+        content = val;
+      } else {
+        console.error(`Invalid --content value: ${val}. Use: all, transcript, notes`);
+        process.exit(1);
+      }
+      i++;
+    } else {
+      positional.push(args[i]);
+    }
+  }
+
+  const folder = positional[0];
   if (!folder) {
-    console.error('Usage: plaud sync <folder>');
+    console.error('Usage: plaud sync [--content all|transcript|notes] <folder>');
     process.exit(1);
   }
+
+  return { folder, content };
+}
+
+export async function syncCommand(args: string[]): Promise<void> {
+  const { folder, content } = parseArgs(args);
 
   const config = new PlaudConfig();
   const creds = config.getCredentials();
@@ -19,7 +45,7 @@ export async function syncCommand(args: string[]): Promise<void> {
   fs.mkdirSync(folder, { recursive: true });
 
   const recordings = await client.listRecordings();
-  console.log(`Found ${recordings.length} recording(s). Checking for new ones...`);
+  console.log(`Found ${recordings.length} recording(s). Syncing ${content} content...`);
 
   let synced = 0;
   for (const rec of recordings) {
@@ -39,6 +65,7 @@ export async function syncCommand(args: string[]): Promise<void> {
       `date: ${date}`,
       `duration: ${Math.round(rec.duration / 60000)}m`,
       `source: plaud`,
+      `content_type: ${content}`,
       `has_transcript: ${detail.transcript.length > 0}`,
       `has_summary: ${detail.summary.length > 0}`,
       '---',
@@ -46,18 +73,28 @@ export async function syncCommand(args: string[]): Promise<void> {
       `# ${rec.filename}`,
     ];
 
-    if (detail.outline) {
-      sections.push('', '## Outline', '', detail.outline);
+    if (content === 'all' || content === 'notes') {
+      if (detail.outline) {
+        sections.push('', '## Outline', '', detail.outline);
+      }
+      if (detail.note) {
+        sections.push('', '## Notes', '', detail.note);
+      } else if (detail.summary) {
+        sections.push('', '## Summary', '', detail.summary);
+      }
     }
 
-    if (detail.note) {
-      sections.push('', '## Notes', '', detail.note);
-    } else if (detail.summary) {
-      sections.push('', '## Summary', '', detail.summary);
-    }
-
-    if (detail.transcript) {
-      sections.push('', '## Transcript', '', detail.transcript);
+    if (content === 'all' || content === 'transcript') {
+      if (detail.transcript) {
+        if (content === 'transcript') {
+          // Transcript-only mode: no section header needed
+          sections.push('', detail.transcript);
+        } else {
+          sections.push('', '## Transcript', '', detail.transcript);
+        }
+      } else {
+        sections.push('', '*(No transcript available)*');
+      }
     }
 
     fs.writeFileSync(mdFile, sections.join('\n'));
